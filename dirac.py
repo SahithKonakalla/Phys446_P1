@@ -26,7 +26,7 @@ def DiracToVec(myState):
     vec = [0 for i in range(2**num_bits)]
     for state in myState:
         index = int(state[1],2)
-        vec[index] = np.round(state[0],3)
+        vec[index] += np.round(state[0],3)
     return vec
 
 def VecToDirac(myVec):
@@ -41,7 +41,7 @@ def VecToDirac(myVec):
 myState2=[
    (np.sqrt(0.1)*1.j, '101'),
    (np.sqrt(0.5), '000') ,
-   (-np.sqrt(0.4), '010' )]
+   (-np.sqrt(0.4), '010' )] 
 
 PrettyPrintBinary(myState2)
 PrettyPrintInteger(myState2)
