@@ -64,25 +64,36 @@ def ReadInputString(myInput_lines):
       myInput.append(line.split())
   return (numberOfWires,myInput)
 
-def Simulator(myState):
+def Simulator(myInput, myState):
   for gate in myInput:
     match gate[0]:
       case "H":
         myState = H(int(gate[1]), myState)
-        break
       case "P":
-        myState = P(int(gate[1]), int(gate[2]), myState)
-        break
+        myState = P(int(gate[1]), float(gate[2]), myState)
       case "CNOT":
         myState = CNOT(int(gate[1]), int(gate[2]), myState)
-        break
+        
   
-  return myState
+  return AddDuplicates(myState)
 
-numberOfWires,myInput=ReadInputString(open('example.circuit').read())
+#numberOfWires,myInput=ReadInputString(open('example.circuit').read())
+
+numberOfWires,myInput=ReadInputString('''
+3
+H 1
+H 2
+P 2 0.3
+CNOT 2 1
+H 1
+H 2
+
+''')#CNOT 2 0
 
 myState=[
-  (1, '0000')
+  (1, '000')
 ]
 
-print(Simulator(myState))
+np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
+
+print(Simulator(myInput, myState))
