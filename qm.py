@@ -116,6 +116,8 @@ def measureState(myState):
 
 def Simulator_a(circuit):
     numberOfWires,myInput,myState,measure=ReadInputString(circuit)
+
+    myInput = precompile(myInput)
     
     myMatrix = np.identity(2**numberOfWires)
     for gate in myInput:
@@ -132,9 +134,12 @@ def Simulator_a(circuit):
 
 def Simulator_b(circuit):
     numberOfWires,myInput,myState,measure=ReadInputString(circuit)
+
+    myInput = precompile(myInput)
     
     myState = np.transpose([myState])
     for gate in myInput:
+        print(myState)
         match gate[0]:
             case "H":
                 myState = HadamardArray(int(gate[1]), numberOfWires).dot(myState)
@@ -145,6 +150,36 @@ def Simulator_b(circuit):
     if measure:
         return measureState(np.ravel(myState))
     return VecToDirac(np.ravel(np.transpose(myState)))
+
+def precompile(circuit):
+    depth = 1
+    i = 0
+    j = 0
+    while j < depth:
+        while i < len(circuit):
+            match circuit[i][0]:
+                case "NOT":
+                    circuit[i] = ["H", circuit[i][1]]
+                    circuit.insert(i+1, ["P", circuit[i][1], str(np.pi)])
+                    circuit.insert(i+2, ["H", circuit[i][1]])
+                case "RZ":
+                    circuit[i] = ["NOT", circuit[i][1]]
+                    circuit.insert(i+1, ["P", circuit[i][1], str(float(circuit[i][2])/2)])
+                    circuit.insert(i+2, ["NOT", circuit[i][1]])
+                    circuit.insert(i+3, ["P", circuit[i][1], str(-float(circuit[i][2])/2)])
+                    depth += 1
+                case "CRZ":
+                    circuit.insert(i+1, ["P", circuit[i][1], str(float(circuit[i][3])/2)])
+                    circuit.insert(i+2, ["CNOT", circuit[i][1], circuit[i][2]])
+                    circuit.insert(i+3, ["P", circuit[i][1], str(-float(circuit[i][3])/2)])
+                    circuit[i] = ["CNOT", circuit[i][1], circuit[i][2]]
+            i += 1
+        j += 1
+    
+    print(circuit)
+    
+    return circuit
+
 
 def DiracToVec(myState):
     num_bits = len(myState[0][1])
@@ -176,7 +211,6 @@ P 2 0.3
 CNOT 2 1
 H 1
 H 2
-MEASURE
 '''
 
 measure_circuit = open('measure.circuit').read()
@@ -184,12 +218,22 @@ measure_circuit2 = open('measure_full.circuit').read()
 input_circuit = open('input.circuit').read()
 input_circuit2 = open('input2.circuit').read()
 not_test_circuit = open('not_test.circuit').read()
+rz_test_circuit = open('rz_test.circuit').read()
+rz_compiler_circuit = open('rz_compiler.circuit').read()
+crz_test_circuit = open('crz_test.circuit').read()
+cphase_test_circuit = open('cphase_test.circuit').read()
+
+new_test = '''
+1
+RZ 0
+'''
 
 
 np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
-print(Simulator_a(not_test_circuit))
-#print(Simulator_b(circuit, myState))
+#print(Simulator_a(circuit))
+print(Simulator_b(cphase_test_circuit))
+#print(Simulator_b(rz_compiler_circuit))
 
 '''outputState = DiracToVec(Simulator_a(measure_circuit2, myState))
 
