@@ -211,14 +211,17 @@ def Simulator_a(circuit, print_matrix = False):
         match gate[0]:
             case "H":
                 myMatrix = HadamardArray(int(gate[1]), numberOfWires).dot(myMatrix)
+                #print(gate, "\n", HadamardArray(int(gate[1]), numberOfWires))
             case "P":
                 myMatrix = PhaseArray(int(gate[1]), numberOfWires, float(gate[2])).dot(myMatrix)
+                #print(gate, "\n", PhaseArray(int(gate[1]), numberOfWires, float(gate[2])))
             case "CNOT":
-                myMatrix = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myMatrix)    
+                myMatrix = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myMatrix)
+                #print(gate, "\n", CNOTArray(int(gate[1]), int(gate[2]), numberOfWires))
     if print_matrix:
         if measure:
-            return measureState(np.ravel(np.asarray(myMatrix.dot(myState)))), myMatrix
-        return VecToDirac(np.round(np.ravel(np.asarray(myMatrix.dot(myState))), 4)), myMatrix
+            return measureState(np.ravel(np.asarray(myMatrix.dot(myState)))), np.round(myMatrix, 3)
+        return VecToDirac(np.round(np.ravel(np.asarray(myMatrix.dot(myState))), 4)), np.round(myMatrix,3)
     else:
         if measure:
             return measureState(np.ravel(np.asarray(myMatrix.dot(myState))))
@@ -282,25 +285,25 @@ def precompile(circuit):
                     gate = circuit[i][1]
                     phase = float(circuit[i][2])
                     circuit[i] = ["NOT", circuit[i][1]]
-                    circuit.insert(i+1, ["P", gate, str(phase/2)])
+                    circuit.insert(i+1, ["P", gate, str(-phase/2)])
                     circuit.insert(i+2, ["NOT", gate])
-                    circuit.insert(i+3, ["P", gate, str(-phase/2)])
+                    circuit.insert(i+3, ["P", gate, str(phase/2)])
                     depth += 1
                 case "CRZ":
                     control = circuit[i][1]
                     output = circuit[i][2]
                     phase = float(circuit[i][3])
                     circuit[i] = ["CNOT", control, output]
-                    circuit.insert(i+1, ["P", output, str(phase/2)])
+                    circuit.insert(i+1, ["P", output, str(-phase/2)])
                     circuit.insert(i+2, ["CNOT", control, output])
-                    circuit.insert(i+3, ["P", output, str(-phase/2)])
+                    circuit.insert(i+3, ["P", output, str(phase/2)])
                     depth += 1
                 case "CPHASE":
                     control = circuit[i][1]
                     output = circuit[i][2]
                     phase = float(circuit[i][3])
                     circuit[i] = ["CRZ", control, output, str(phase)]
-                    circuit.insert(i+1, ["P", control, str(-phase/2)])  
+                    circuit.insert(i+1, ["P", control, str(phase/2)])  
                     depth += 1
                 case "SWAP":
                     gate1 = circuit[i][1]
@@ -340,10 +343,12 @@ def isDirac(myState):
 np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
 circuit = '''
-3
-INITSTATE BASIS |110>
-P 0 np.pi
+2
+INITSTATE BASIS |00>
+CPHASE 0 1 -np.pi/2
 '''
+
+#print(Simulator_a(circuit, True)[1])
 
 # Quantum Fourier Transform
 
@@ -352,12 +357,12 @@ circuit = open("Circuits/qft3-v2.circuit").read()
 A = Simulator_a(circuit, True)[1]
 print(np.round(A*np.sqrt(8), 2))
 
-B = np.zeros((8,8), dtype=complex)
+'''B = np.zeros((8,8), dtype=complex)
 for i in range(len(B)):
     for j in range(len(B[0])):
         B[i][j] = np.round(np.power(np.sqrt(0+1j),(i*j)), 2)
 
-print(B)
+print(B)'''
 # Phase Estimation
 
 # Two Wires

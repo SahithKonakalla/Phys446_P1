@@ -1,8 +1,8 @@
 3
 H 2
-CPHASE 1 2 np.pi/2
+CPHASE 1 2 np.pi/4
 H 1
-CPHASE 0 2 np.pi/4
-CPHASE 0 1 np.pi/2
+CPHASE 0 2 np.pi/8
+CPHASE 0 1 np.pi/4
 H 0
 SWAP 0 2
