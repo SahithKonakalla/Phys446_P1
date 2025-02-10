@@ -142,7 +142,6 @@ def ReadInputString(myInput_lines):
     for line in myInput_lines[1:]:
         if len(line.split()) == 0:
             continue
-        myInput.append(line.split())
         if line == "MEASURE":
             measure = True
         elif line.split()[0] == "INITSTATE":
@@ -150,6 +149,8 @@ def ReadInputString(myInput_lines):
                 myState = ReadInputStateFromFile(line.split()[2])
             elif line.split()[1] == "BASIS":
                 myState = ReadInputStateFromBasis(line.split()[2])
+        else:
+            myInput.append(line.split())
     return (numberOfWires,myInput,myState, measure)
 
 def ReadInputStateFromFile(file):
@@ -176,8 +177,7 @@ def measureState(myState):
 
     myStateConj = np.conjugate(myState)
     myState = np.real(np.multiply(myStateConj, myState))
-
-    return np.random.choice(len(myState), 1, p=myState)
+    return format(np.where(np.random.multinomial(1, myState) == 1)[0][0], "0" + str(int(np.log2(len(myState)))) + "b")
 
 def Simulator_s(circuit):
     numberOfWires,myInput,myState,measure=ReadInputString(circuit)
@@ -198,7 +198,8 @@ def Simulator_s(circuit):
     myState = AddDuplicates(myState)
 
     if measure:
-        return measureState(DiracToVec(np.ravel(np.asarray(myState))))
+        print(DiracToVec(myState))
+        return measureState(DiracToVec(myState))
     return myState
 
 def Simulator_a(circuit, print_matrix = False):
@@ -348,14 +349,20 @@ INITSTATE BASIS |00>
 CPHASE 0 1 -np.pi/2
 '''
 
+circuit = open('Circuits/example.circuit').read()
+
+print(Simulator_s(circuit))
+print(Simulator_a(circuit))
+print(Simulator_b(circuit))
+
 #print(Simulator_a(circuit, True)[1])
 
 # Quantum Fourier Transform
 
-circuit = open("Circuits/qft3-v2.circuit").read()
+#circuit = open("Circuits/qft3-v2.circuit").read()
 
-A = Simulator_a(circuit, True)[1]
-print(np.round(A*np.sqrt(8), 2))
+#A = Simulator_a(circuit, True)[1]
+#print(np.round(A*np.sqrt(8), 2))
 
 '''B = np.zeros((8,8), dtype=complex)
 for i in range(len(B)):
