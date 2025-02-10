@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import timeit
+import phase_est_circuit
 
 def H(wire,inputState):
   newState = []
@@ -166,6 +167,11 @@ def ReadInputStateFromFile(file):
 
     return state
 
+def MakeFileFromBasis(basis, filename):
+    f = open(filename +  ".circuit", "w")
+    for elem in basis:
+        f.write(np.real(basis) + " " + np.imag(basis) + "\n")
+
 def ReadInputStateFromBasis(basis):
     index = int(basis[1:(len(basis)-1)], 2)
 
@@ -198,7 +204,6 @@ def Simulator_s(circuit):
     myState = AddDuplicates(myState)
 
     if measure:
-        print(DiracToVec(myState))
         return measureState(DiracToVec(myState))
     return myState
 
@@ -242,6 +247,7 @@ def Simulator_b(circuit):
                 myState = PhaseArray(int(gate[1]), numberOfWires, float(gate[2])).dot(myState)
             case "CNOT":
                 myState = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myState)
+        #print(gate, VecToDirac(np.round(np.asarray(np.ravel(myState)),3)))
     if measure:
         return measureState(np.ravel(myState))
     return VecToDirac(np.round(np.ravel(np.transpose(myState)), 4))
@@ -345,24 +351,19 @@ np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
 circuit = '''
 2
-INITSTATE BASIS |00>
-CPHASE 0 1 -np.pi/2
+INITSTATE FILE swap_test.txt
+SWAP 0 1 
 '''
 
-circuit = open('Circuits/example.circuit').read()
+#circuit = open('Circuits/example.circuit').read()
 
-print(Simulator_s(circuit))
-print(Simulator_a(circuit))
-print(Simulator_b(circuit))
-
-#print(Simulator_a(circuit, True)[1])
+#print(Simulator_a(circuit,True)[0])
 
 # Quantum Fourier Transform
 
-#circuit = open("Circuits/qft3-v2.circuit").read()
+#circuit = open("Circuits/qft3.circuit").read()
 
-#A = Simulator_a(circuit, True)[1]
-#print(np.round(A*np.sqrt(8), 2))
+#print(np.round(Simulator_a(circuit, True)[1]*np.sqrt(8), 2))
 
 '''B = np.zeros((8,8), dtype=complex)
 for i in range(len(B)):
@@ -370,7 +371,65 @@ for i in range(len(B)):
         B[i][j] = np.round(np.power(np.sqrt(0+1j),(i*j)), 2)
 
 print(B)'''
+
 # Phase Estimation
+
+# Eigenstates
+
+testvec = [0 for i in range(2**6)]
+testvec[0] = np.sqrt(0.3)
+testvec[1] = np.sqrt(0.7)
+MakeFileFromBasis(testvec, "eigenstates_test.txt")
+phase_estimation_circuit = "7 \n INITSTATE FILE eigenstates_test.txt" + phase_est_circuit.makePhaseEstCircuit(6,7, 0.5)
+
+# 6 Wires
+
+'''phase = np.linspace(0, 2*np.pi, 8)
+estim_list = []
+
+for p in phase:
+    print(p)
+    phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> " + phase_est_circuit.makePhaseEstCircuit(6,7, p)
+
+    out = Simulator_s(phase_estimation_circuit)
+
+    estim = 0
+    amp = 0
+
+    for i in out:
+        temp_amp = np.conj(i[0])*i[0]
+        if temp_amp > amp:
+            amp = temp_amp
+            estim = int(i[1][0:len(i[1])], 2)/(2**(len(i[1])-1))
+
+    estim_list.append(estim)
+
+plt.figure(0)
+plt.plot(phase/(2*np.pi), estim_list)
+plt.title("Phase Estimation with Six Wires")
+plt.xlabel("Real Phase")
+plt.ylabel("Estimated Phase")
+plt.savefig("Images/phaseest6.png")
+
+p = 0.1432394487827058*2*np.pi
+phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> " + phase_est_circuit.makePhaseEstCircuit(6,7, p)
+out = Simulator_s(phase_estimation_circuit)
+
+vals = [np.conj(out[i][0])*out[i][0] for i in range(len(out))]
+steps = [i/(2**(len(out[0][1])-1)) for i in range(len(out)+1)]
+
+print((2**(len(out[0][1])-1)))
+print(vals)
+print(steps)
+
+plt.figure(1)
+plt.stairs(vals, steps, fill=True)
+plt.axvline(x=0.1432394487827058, color='r', linestyle='--')
+plt.title("Phase Estimation of 0.1432394487827058")
+plt.xlabel("Estimated Phase")
+plt.ylabel("Probability")
+plt.savefig("Images/phaseesthist6.png")
+plt.show()'''
 
 # Two Wires
 
@@ -395,10 +454,10 @@ for p in phase:
 
 plt.figure(0)
 plt.plot(phase/(2*np.pi), estim_list)
-plt.title("Phase Estimation with One Wire")
+plt.title("Phase Estimation with Two Wires")
 plt.xlabel("Real Phase")
 plt.ylabel("Estimated Phase")
-plt.savefig("phaseest2.png")
+plt.savefig("Images/phaseest2.png")
 
 p = 0.1432394487827058*2*np.pi
 phase_estimation_circuit = "3 \n INITSTATE BASIS |001> \n H 0 \n H 1 \n CPHASE 1 2 " + str(p) + " \n CPHASE 0 2 " + str(p) + " \n CPHASE 0 2 " + str(p) + "\n H 0 \n CPHASE 0 1 " + str(-np.pi/2) + " \n H 1 \n SWAP 0 1"
@@ -417,7 +476,7 @@ plt.axvline(x=0.1432394487827058, color='r', linestyle='--')
 plt.title("Phase Estimation of 0.1432394487827058")
 plt.xlabel("Estimated Phase")
 plt.ylabel("Probability")
-plt.savefig("phaseesthist2.png")
+plt.savefig("Images/phaseesthist2.png")
 plt.show()'''
 
 # One Wire

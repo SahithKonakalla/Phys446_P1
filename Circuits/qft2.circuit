@@ -1,0 +1,6 @@
+2
+INITSTATE BASIS <11|
+SWAP 1 0
+H 1
+CPHASE 1 0 np.pi/2
+H 0
