@@ -168,9 +168,9 @@ def ReadInputStateFromFile(file):
     return state
 
 def MakeFileFromBasis(basis, filename):
-    f = open(filename +  ".circuit", "w")
+    f = open(filename, "w")
     for elem in basis:
-        f.write(np.real(basis) + " " + np.imag(basis) + "\n")
+        f.write(str(np.real(elem)) + " " + str(np.imag(elem)) + "\n")
 
 def ReadInputStateFromBasis(basis):
     index = int(basis[1:(len(basis)-1)], 2)
@@ -193,6 +193,7 @@ def Simulator_s(circuit):
     myState = VecToDirac(myState)
   
     for gate in myInput:
+        print(gate)
         match gate[0]:
             case "H":
                 myState = H(int(gate[1]), myState)
@@ -201,7 +202,7 @@ def Simulator_s(circuit):
             case "CNOT":
                 myState = CNOT(int(gate[1]), int(gate[2]), myState)
     
-    myState = AddDuplicates(myState)
+        myState = AddDuplicates(myState)
 
     if measure:
         return measureState(DiracToVec(myState))
@@ -374,25 +375,93 @@ print(B)'''
 
 # Phase Estimation
 
+def phaseEstBoxer(top_wires,num_wires,out):
+    vals = [0 for i in range(2**top_wires)]
+
+    for state in out:
+        pos = int(state[1][:top_wires], 2)
+        vals[pos] += np.conj(state[0])*state[0]
+    
+    return vals
+
+# Measure
+
+circuit = open("Circuits/measure.circuit").read()
+print(Simulator_s(circuit))
+
+# Arbitrary 
+
+'''phase_estimation_circuit = "8 \n INITSTATE BASIS |00000011> \n" + phase_est_circuit.makeArbitraryPhaseEstCircuit(6, "NOT 0 \n P 0 0.3 \n NOT 1 \n")
+out = Simulator_s(phase_estimation_circuit)
+print(out)
+
+steps = [i/(2**(len(out[0][1])-2)) for i in range(2**6+1)]
+vals = phaseEstBoxer(6,8,out)
+
+plt.figure(0)
+plt.stairs(vals, steps, fill=True)
+plt.title("Phase Estimation with New Circuit")
+plt.xlabel("Estimated Phase")
+plt.ylabel("Probability")
+plt.savefig("Images/phaseesthistarbit.png")
+plt.show()'''
+
+# Speed
+
+'''phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> \n" + phase_est_circuit.makePhaseEstCircuit(6,7, 0.5*2*np.pi)
+out = Simulator_s(phase_estimation_circuit)
+print(out)
+
+steps = [i/(2**(len(out[0][1])-1)) for i in range(2**6+1)]
+vals = phaseEstBoxer(6,7,out)
+
+#print(vals)
+#print(steps)
+
+plt.figure(0)
+plt.stairs(vals, steps, fill=True)
+plt.axvline(x=0.5, color='r', linestyle='--')
+plt.title("Phase Estimation of 0.5 with New Phase Trick")
+plt.xlabel("Estimated Phase")
+plt.ylabel("Probability")
+plt.savefig("Images/phaseesthistspeed.png")
+plt.show()'''
+
 # Eigenstates
 
-testvec = [0 for i in range(2**6)]
+'''testvec = [0 for i in range(2**7)]
 testvec[0] = np.sqrt(0.3)
 testvec[1] = np.sqrt(0.7)
 MakeFileFromBasis(testvec, "eigenstates_test.txt")
-phase_estimation_circuit = "7 \n INITSTATE FILE eigenstates_test.txt" + phase_est_circuit.makePhaseEstCircuit(6,7, 0.5)
+phase_estimation_circuit = "7 \n INITSTATE FILE eigenstates_test.txt \n" + phase_est_circuit.makePhaseEstCircuit(6,7, 0.5*2*np.pi)
+out = Simulator_s(phase_estimation_circuit)
+print(out)
+
+steps = [i/(2**(len(out[0][1])-1)) for i in range(2**6+1)]
+vals = phaseEstBoxer(6,7,out)
+
+#print(vals)
+#print(steps)
+
+plt.figure(0)
+plt.stairs(vals, steps, fill=True)
+plt.axvline(x=0.5, color='r', linestyle='--')
+plt.title("Phase Estimation of 0.5 with Different Eigenstate")
+plt.xlabel("Estimated Phase")
+plt.ylabel("Probability")
+plt.savefig("Images/phaseesthisteigen.png")
+plt.show()'''
 
 # 6 Wires
 
-'''phase = np.linspace(0, 2*np.pi, 8)
+'''phase = np.linspace(0, 2*np.pi, 9)
 estim_list = []
 
 for p in phase:
-    print(p)
+    print(p/(2*np.pi))
     phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> " + phase_est_circuit.makePhaseEstCircuit(6,7, p)
 
     out = Simulator_s(phase_estimation_circuit)
-
     estim = 0
     amp = 0
 
@@ -400,7 +469,7 @@ for p in phase:
         temp_amp = np.conj(i[0])*i[0]
         if temp_amp > amp:
             amp = temp_amp
-            estim = int(i[1][0:len(i[1])], 2)/(2**(len(i[1])-1))
+            estim = int(i[1][0:len(i[1])-1], 2)/(2**(len(i[1])-1))
 
     estim_list.append(estim)
 
@@ -412,15 +481,14 @@ plt.ylabel("Estimated Phase")
 plt.savefig("Images/phaseest6.png")
 
 p = 0.1432394487827058*2*np.pi
-phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> " + phase_est_circuit.makePhaseEstCircuit(6,7, p)
+phase_estimation_circuit = "7 \n INITSTATE BASIS |0000001> \n" + phase_est_circuit.makePhaseEstCircuit(6,7, p)
 out = Simulator_s(phase_estimation_circuit)
 
-vals = [np.conj(out[i][0])*out[i][0] for i in range(len(out))]
+vals = phaseEstBoxer(6,7,out)
 steps = [i/(2**(len(out[0][1])-1)) for i in range(len(out)+1)]
 
-print((2**(len(out[0][1])-1)))
-print(vals)
-print(steps)
+#print(vals)
+#print(steps)
 
 plt.figure(1)
 plt.stairs(vals, steps, fill=True)
@@ -463,12 +531,9 @@ p = 0.1432394487827058*2*np.pi
 phase_estimation_circuit = "3 \n INITSTATE BASIS |001> \n H 0 \n H 1 \n CPHASE 1 2 " + str(p) + " \n CPHASE 0 2 " + str(p) + " \n CPHASE 0 2 " + str(p) + "\n H 0 \n CPHASE 0 1 " + str(-np.pi/2) + " \n H 1 \n SWAP 0 1"
 out = Simulator_s(phase_estimation_circuit)
 
-vals = [np.conj(out[i][0])*out[i][0] for i in range(len(out))]
+vals = phaseEstBoxer(2,3,out)
 steps = [i/(2**(len(out[0][1])-1)) for i in range(len(out)+1)]
 
-print((2**(len(out[0][1])-1)))
-print(vals)
-print(steps)
 
 plt.figure(1)
 plt.stairs(vals, steps, fill=True)
@@ -512,7 +577,7 @@ plt.savefig("phaseest1.png")'''
 '''phase_estimation_circuit = "2 \n INITSTATE BASIS |01> \n H 0 \n CPHASE 0 1 " + str(2*np.pi*0.1432394487827058) + "\n H 0"
 out = Simulator_s(phase_estimation_circuit)
 
-vals = [np.conj(out[i][0])*out[i][0] for i in range(len(out))]
+vals = phaseEstBoxer(1,2,out)
 steps = [i/len(out[0][1]) for i in range(len(out)+1)]
 
 print(vals)
