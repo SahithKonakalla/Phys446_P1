@@ -193,7 +193,6 @@ def Simulator_s(circuit):
     myState = VecToDirac(myState)
   
     for gate in myInput:
-        print(gate)
         match gate[0]:
             case "H":
                 myState = H(int(gate[1]), myState)
@@ -348,6 +347,20 @@ def isDirac(myState):
         return False
     return True
 
+def writeCircuit(circuit, filename):
+    f = open(filename + ".circuit", "w")
+    f.write(circuit)
+    f.close()
+
+def phaseEstBoxer(top_wires,num_wires,out):
+    vals = [0 for i in range(2**top_wires)]
+
+    for state in out:
+        pos = int(state[1][:top_wires], 2)
+        vals[pos] += np.conj(state[0])*state[0]
+    
+    return vals
+
 np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
 circuit = '''
@@ -360,34 +373,30 @@ SWAP 0 1
 
 #print(Simulator_a(circuit,True)[0])
 
+
 # Quantum Fourier Transform
 
-#circuit = open("Circuits/qft3.circuit").read()
+# 5 Qubits
 
-#print(np.round(Simulator_a(circuit, True)[1]*np.sqrt(8), 2))
+# qftcircuit = phase_est_circuit.makeQFTCircuit(5)
+# writeCircuit("5 \n" + "INITSTATE FILE myInputState.txt \n"+ qftcircuit, "Circuits\qft5")
+circuit = open('Circuits/qft5.circuit').read()
+print(Simulator_s(circuit))
 
-'''B = np.zeros((8,8), dtype=complex)
+# 3 Qubits
+
+'''circuit = open("Circuits/qft3.circuit").read()
+
+A = Simulator_a(circuit, True)[1]
+
+B = np.zeros((8,8), dtype=complex)
 for i in range(len(B)):
     for j in range(len(B[0])):
-        B[i][j] = np.round(np.power(np.sqrt(0+1j),(i*j)), 2)
+        B[i][j] = np.round(np.power(np.sqrt(0+1j),(i*j)), 2)/np.sqrt(8)
 
-print(B)'''
+print(np.round(A-B,2))'''
 
 # Phase Estimation
-
-def phaseEstBoxer(top_wires,num_wires,out):
-    vals = [0 for i in range(2**top_wires)]
-
-    for state in out:
-        pos = int(state[1][:top_wires], 2)
-        vals[pos] += np.conj(state[0])*state[0]
-    
-    return vals
-
-# Measure
-
-circuit = open("Circuits/measure.circuit").read()
-print(Simulator_s(circuit))
 
 # Arbitrary 
 
@@ -668,3 +677,8 @@ plt.hist(bins, bins, weights=prob_dist)
 plt.savefig("MeasPD")
 
 #print(Simulator_b(measure_circuit, myState))'''
+
+# Measure
+
+#circuit = open("Circuits/measure.circuit").read()
+#print(Simulator_s(circuit))

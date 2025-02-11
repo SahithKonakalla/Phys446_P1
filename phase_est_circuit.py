@@ -69,3 +69,4 @@ def makeControl(control, top_wires, circuit):
         else:
             output += line + "\n"
     return output
+
