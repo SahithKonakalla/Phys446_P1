@@ -3,6 +3,18 @@ from fractions import Fraction
 import sys
 import phase_est_circuit
 import quantum_simulators
+import os
+import matplotlib.pyplot as plt
+
+def buildUnitary(x, N):
+    matrix_dim = 2**int(np.ceil(np.log2(N)))
+    matrix = np.zeros((matrix_dim, matrix_dim))
+    for i in range(matrix_dim):
+        if i < N:
+            matrix[i*x % N][i] = 1
+        else:
+            matrix[i][i] = 1
+    return matrix
 
 def isPrime(n):
     if n % 2 == 0 and n > 2: 
@@ -30,39 +42,47 @@ def findPeriod2(x, N):
     while rand_eig == 0:
         rand_eig = np.random.choice(phases)
 
-    r = (Fraction(rand_eig).limit_denominator(39)).denominator
+    r = (Fraction(rand_eig).limit_denominator(N)).denominator
     return r
+
+def getTopWires(u_wires):
+    return 2*u_wires + 1
+
+def generateShorCircuit(x, N):
+    u_wires = int(np.ceil(np.log2(N)))
+    u_circuit = str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(x) + " " + str(N)
+    top_wires = getTopWires(u_wires)
+    num_wires = top_wires + u_wires
+    circuit = phase_est_circuit.makeArbitraryPhaseEstCircuit(top_wires,u_circuit)
+    input_state = format(1, "0" + str(num_wires) + "b")
+
+    circuit = str(num_wires) + "\n" + "INITSTATE BASIS |" + input_state + "> \n" + circuit
+    quantum_simulators.writeCircuit(circuit, "Shor_Circuits/shor-" + str(x) + "-" + str(N))
+    return circuit
 
 def findPeriodQ(x, N):
     u_wires = int(np.ceil(np.log2(N)))
-    u_circuit = str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(x) + " " + str(N)
-    top_wires = 2*u_wires + 1
-    num_wires = top_wires + u_wires
-    circuit = phase_est_circuit.makeArbitraryPhaseEstCircuit(top_wires,u_circuit)
-    input_state = format(N, "0" + str(num_wires) + "b")
-
-    quantum_simulators.writeCircuit(circuit, "Shor_Circuits/shor-"+ str(x) + "-" + str(N))
-    out = quantum_simulators.Simulator_s(str(num_wires) + "\n" + "INITSTATE BASIS |" + input_state + "> \n" + circuit)
-    #print(out)
+    top_wires = getTopWires(u_wires)
+    
+    out = quantum_simulators.Simulator_s(generateShorCircuit(x, N))
+    # print(out)
 
     estim = 0
     amp = 0
     for i in out:
+        if int(i[1][0:top_wires], 2) == 0:
+            continue
         temp_amp = np.conj(i[0])*i[0]
         if temp_amp > amp:
             amp = temp_amp
             estim = int(i[1][0:top_wires], 2)/(2**(top_wires))
-    #print(estim)
+    # print(estim)
 
-    r = (Fraction(estim).limit_denominator(39)).denominator
+    r = (Fraction(estim).limit_denominator(N)).denominator
     return r
 
 def classicalShor(N):
-    if N % 2 == 0:
-        return -1
-    if isPrime(N):
-        return -1
-    if isRoot(N):
+    if disregardEasy(N):
         return -1
     
     while True:
@@ -78,16 +98,12 @@ def classicalShor(N):
 
         A = np.gcd(int((x**(r//2)-1) % N),N)
         B = np.gcd(int((x**(r//2)+1) % N),N)
-        if A != 1 and B != 1:
-            #return (A, B)
-            return (A, B, x, r)
+        if A != 1 and B != 1 and A != N and B != N:
+            return (A, B)
+            #return (A, B, x, r)
 
 def classicalShor2(N):
-    if N % 2 == 0:
-        return -1
-    if isPrime(N):
-        return -1
-    if isRoot(N):
+    if disregardEasy(N):
         return -1
     
     while True:
@@ -104,16 +120,12 @@ def classicalShor2(N):
 
         A = np.gcd(int((x**(r//2)-1) % N),N)
         B = np.gcd(int((x**(r//2)+1) % N),N)
-        if A != 1 and B != 1:
-            #return (A, B)
-            return (A, B, x, r)
+        if A != 1 and B != 1 and A != N and B != N:
+            return (A, B)
+            #return (A, B, x, r)
 
 def QuantumShor(N):
-    if N % 2 == 0:
-        return -1
-    if isPrime(N):
-        return -1
-    if isRoot(N):
+    if disregardEasy(N):
         return -1
     
     while True:
@@ -124,34 +136,65 @@ def QuantumShor(N):
         
         print("Finding Period for: x =", x, ", N =", N)
         r = findPeriodQ(x,N)
-        print(x, N, r)
+        print("Found Period of: r =", r)
 
         if r % 2 == 1:
             continue
 
         A = np.gcd(int((x**(r//2)-1) % N),N)
         B = np.gcd(int((x**(r//2)+1) % N),N)
-        if A != 1 and B != 1:
-            #return (A, B)
-            return (A, B, x, r)
+        if A != 1 and B != 1 and A != N and B != N:
+            return (A, B)
+            #return (A, B, x, r)
 
-def buildUnitary(x, N):
-    matrix_dim = 2**int(np.ceil(np.log2(N)))
-    matrix = np.zeros((matrix_dim, matrix_dim))
-    for i in range(matrix_dim):
-        if i < N:
-            matrix[i*x % N][i] = 1
-        else:
-            matrix[i][i] = 1
-    return matrix
+def disregardEasy(N):
+    if N % 2 == 0:
+        return True
+    if isPrime(N):
+        return True
+    if isRoot(N):
+        return True
 
-print(findPeriodQ(3,8))
-print(findPeriodQ(3,5))
-print(findPeriodQ(3,7))
+
+#print(findPeriodQ(3,8))
+#print(findPeriodQ(3,5))
+#print(findPeriodQ(3,10))
+#print(findPeriodQ(14,15))
+#print(findPeriodQ(5,21))
+
+#print(QuantumShor(15))
+
+# Gate Sizes
+
+for i in range(2,100):
+    generateShorCircuit(1, i)
+
+generated_circuits = os.listdir("Shor_Circuits")
+
+n_list = []
+gate_list = []
+for circuit in generated_circuits:
+    #print(circuit, circuit.split("-")[-1][:-8], len(open("Shor_Circuits/" + circuit).readlines()))
+    n_list.append(int(circuit.split("-")[-1][:-8]))
+    gate_list.append(len(open("Shor_Circuits/" + circuit).readlines()))
+
+plt.figure(0)
+plt.scatter(n_list,gate_list)
+plt.xlabel("N")
+plt.ylabel("Number of Gates")
+plt.title("Gates needed for using Shor's Algorithm")
+plt.savefig("Images/shorgates")
 
 # Quantum Shor
 
-#QuantumShor(15)
+'''for i in range(7,25):
+    print("Factoring:", i)
+    factors3 = QuantumShor(i)
+    factors2 = classicalShor2(i)
+    factors = classicalShor(i)
+    if factors != -1 or factors2 != -1 or factors3 != -1:
+        print("Non-Trivial! Factors:")
+        print(factors, "---", factors2, "---", factors3)'''
 
 # Classical with Unitary Matrix
 

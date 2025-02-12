@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import timeit
@@ -219,7 +220,6 @@ def Simulator_s(circuit):
     myState = VecToDirac(myState)
 
     circuit_len = len(myInput)
-  
     i = 0
     for gate in myInput:
         match gate[0]:
@@ -234,9 +234,9 @@ def Simulator_s(circuit):
             case "CxyModN":
                 myState = CxyModN(int(gate[1]), int(gate[2]), int(gate[3]), int(gate[4]), int(gate[5]), myState)
     
-        myState = AddDuplicates(myState)
         i += 1
         printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        myState = AddDuplicates(myState)
 
     if measure:
         return measureState(DiracToVec(myState))
@@ -248,6 +248,9 @@ def Simulator_a(circuit, print_matrix = False):
     myInput = precompile(myInput)
     
     myMatrix = np.identity(2**numberOfWires)
+
+    circuit_len = len(myInput)
+    i = 0
     for gate in myInput:
         match gate[0]:
             case "H":
@@ -256,6 +259,8 @@ def Simulator_a(circuit, print_matrix = False):
                 myMatrix = PhaseArray(int(gate[1]), numberOfWires, float(gate[2])).dot(myMatrix)
             case "CNOT":
                 myMatrix = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myMatrix)
+        i += 1
+        printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
     if print_matrix:
         if measure:
             return measureState(np.ravel(np.asarray(myMatrix.dot(myState)))), np.round(myMatrix, 3)
@@ -271,6 +276,9 @@ def Simulator_b(circuit):
     myInput = precompile(myInput)
     
     myState = np.transpose([myState])
+
+    circuit_len = len(myInput)
+    i = 0
     for gate in myInput:
         match gate[0]:
             case "H":
@@ -279,8 +287,8 @@ def Simulator_b(circuit):
                 myState = PhaseArray(int(gate[1]), numberOfWires, float(gate[2])).dot(myState)
             case "CNOT":
                 myState = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myState)
-        #print(gate, VecToDirac(np.round(np.asarray(np.ravel(myState)),3)))
-    if measure:
+        i += 1
+        printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
         return measureState(np.ravel(myState))
     return VecToDirac(np.round(np.ravel(np.transpose(myState)), 4))
 
@@ -427,6 +435,8 @@ SWAP 0 1
 #print(Simulator_a(circuit,True)[0])
 
 # Shor's
+
+# Gates vs N
 
 # CxyModN
 
@@ -736,7 +746,7 @@ plt.legend(["Simulator S", "Simulator M-a", "Simulator M-b"])
 plt.title("Time Complexity of Different Quantum Simulators")
 plt.xlabel("Number of Qubits")
 plt.ylabel("Time (s)")
-plt.savefig("timecomp.png")'''
+plt.savefig("timecomp2.png")'''
 
 # Measure Probability Distribution
 
@@ -771,5 +781,5 @@ plt.savefig("MeasPD")
 
 # Measure
 
-#circuit = open("Circuits/measure.circuit").read()
-#print(Simulator_s(circuit))
+'''circuit = open("Circuits/input.circuit").read()
+print(Simulator_s(circuit))'''
