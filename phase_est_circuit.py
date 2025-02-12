@@ -66,6 +66,8 @@ def makeControl(control, top_wires, circuit):
             output += "CNOT" + " " + str(control) + " " + str(int(line.split()[-1]) + top_wires) + "\n"
         elif "P" in line:
             output += "CPHASE" + " " + str(control) + " " + str(int(line.split()[-2]) + top_wires) + " " + line.split()[-1] + "\n"
+        elif "xyModN" in line:
+            output += "CxyModN" + " " + str(control) + " " + str(int(line.split()[1]) + top_wires) + " " + line.split()[2] + " " + line.split()[3] + " " + line.split()[4] +  "\n"
         else:
             output += line + "\n"
     return output

@@ -22,14 +22,11 @@ def H(wire,inputState):
 def P(wire, theta, inputState):
     newState = []
 
-    # Iterate through each element in the input state
     for element in inputState:
-        amplitude, basis = element  # Unpack amplitude and basis state
+        amplitude, basis = element
         if int(basis[wire]) == 0:
-            # If the qubit is in state |0>, no phase change
             newState.append((amplitude, basis))
         elif int(basis[wire]) == 1:
-            # If the qubit is in state |1>, apply phase shift e^(i * theta)
             newAmplitude = amplitude * np.exp(1j * theta)
             newState.append((newAmplitude, basis))
 
@@ -43,6 +40,35 @@ def CNOT(controlWire,notWire,inputState):
         elif int(element[1][controlWire]) == 1:
           changed = element[1][:notWire] + ("1" if element[1][notWire] == "0" else "0") + element[1][notWire+1:]
           newState.append((element[0], changed))
+    return newState
+
+def xyModN(firstWire, numberOfWires, x, N, inputState):
+    newState = []
+
+    for element in inputState:
+        amplitude, basis = element
+        int_basis = int(basis[firstWire:(firstWire+numberOfWires)], 2)
+        if int_basis < N:
+            #print(basis[:firstWire], format(int_basis*x % N, "0" + str(numberOfWires) + "b"), basis[(firstWire+numberOfWires):])
+            newState.append((amplitude, basis[:firstWire] + format(int_basis*x % N, "0" + str(numberOfWires) + "b") + basis[(firstWire+numberOfWires):]))
+        else:
+            newState.append(element)
+    return newState
+
+def CxyModN(controlWire, firstWire, numberOfWires, x, N, inputState):
+    newState = []
+
+    for element in inputState:
+        if int(element[1][controlWire]) == 0:
+            newState.append(element)
+            continue
+        
+        amplitude, basis = element
+        int_basis = int(basis[firstWire:(firstWire+numberOfWires)], 2)
+        if int_basis < N:
+            newState.append((amplitude, basis[:firstWire] + format(int_basis*x % N, "0" + str(numberOfWires) + "b") + basis[(firstWire+numberOfWires):]))
+        else:
+            newState.append(element)
     return newState
 
 def AddDuplicates(myState):
@@ -191,7 +217,10 @@ def Simulator_s(circuit):
     myInput = precompile(myInput)
 
     myState = VecToDirac(myState)
+
+    circuit_len = len(myInput)
   
+    i = 0
     for gate in myInput:
         match gate[0]:
             case "H":
@@ -200,8 +229,14 @@ def Simulator_s(circuit):
                 myState = P(int(gate[1]), float(gate[2]), myState)
             case "CNOT":
                 myState = CNOT(int(gate[1]), int(gate[2]), myState)
+            case "xyModN":
+                myState = xyModN(int(gate[1]), int(gate[2]), int(gate[3]), int(gate[4]), myState)
+            case "CxyModN":
+                myState = CxyModN(int(gate[1]), int(gate[2]), int(gate[3]), int(gate[4]), int(gate[5]), myState)
     
         myState = AddDuplicates(myState)
+        i += 1
+        printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
     if measure:
         return measureState(DiracToVec(myState))
@@ -217,13 +252,10 @@ def Simulator_a(circuit, print_matrix = False):
         match gate[0]:
             case "H":
                 myMatrix = HadamardArray(int(gate[1]), numberOfWires).dot(myMatrix)
-                #print(gate, "\n", HadamardArray(int(gate[1]), numberOfWires))
             case "P":
                 myMatrix = PhaseArray(int(gate[1]), numberOfWires, float(gate[2])).dot(myMatrix)
-                #print(gate, "\n", PhaseArray(int(gate[1]), numberOfWires, float(gate[2])))
             case "CNOT":
                 myMatrix = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myMatrix)
-                #print(gate, "\n", CNOTArray(int(gate[1]), int(gate[2]), numberOfWires))
     if print_matrix:
         if measure:
             return measureState(np.ravel(np.asarray(myMatrix.dot(myState)))), np.round(myMatrix, 3)
@@ -361,6 +393,27 @@ def phaseEstBoxer(top_wires,num_wires,out):
     
     return vals
 
+def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total: 
+        print()
+
 np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
 circuit = '''
@@ -373,15 +426,53 @@ SWAP 0 1
 
 #print(Simulator_a(circuit,True)[0])
 
+# Shor's
+
+# CxyModN
+
+
+'''x = 2
+N = 5
+mat = 3
+
+for q in range(mat+1, 8):
+    for w in range(1,q-mat+1):
+        print("qubits: ", q, ", first wire: ", w)
+        for i in range(0,2**q):
+            circuit = str(q) + " \n INITSTATE BASIS |" + format(i, "0" + str(q) + "b") + "> \n CxyModN 0 " + str(w) + " " + str(mat) + " " + str(x) + " " + str(N) 
+            amplitude, basis = Simulator_s(circuit)[0]
+            int_basis = int(format(i, "0" + str(q) + "b")[w:(w+mat)],2)
+            if int(basis[0]) == 1 and int(basis[w:(w+mat)], 2) == (int_basis*x % N if int_basis < N else int_basis):
+                print(format(i, "0" + str(q) + "b"), "c", int(basis[w:(w+mat)], 2), "==", (int_basis*x % N if int_basis < N else int_basis))
+            elif int(basis[0]) == 0 and int(basis[w:(w+mat)], 2) == int_basis:
+                print(format(i, "0" + str(q) + "b"), "nc", int(basis[w:(w+mat)], 2) , "==", int_basis)'''
+
+
+# xyModN
+
+'''
+x = 2
+N = 5
+mat = 3
+
+for q in range(mat, 8):
+    for w in range(q-mat+1):
+        print("qubits: ", q, ", first wire: ", w)
+        for i in range(0,2**q):
+            circuit = str(q) + " \n INITSTATE BASIS |" + format(i, "0" + str(q) + "b") + "> \n xyModN " + str(w) + " " + str(mat) + " " + str(x) + " " + str(N) 
+            amplitude, basis = Simulator_s(circuit)[0]
+            int_basis = int(format(i, "0" + str(q) + "b")[w:(w+mat)],2)
+            print(i, int(basis[w:(w+mat)], 2) == (int_basis*x % N if int_basis < N else int_basis), int(basis[w:(w+mat)], 2) , " == ", (int_basis*x % N if int_basis < N else int_basis))
+'''
 
 # Quantum Fourier Transform
 
 # 5 Qubits
 
-# qftcircuit = phase_est_circuit.makeQFTCircuit(5)
+'''# qftcircuit = phase_est_circuit.makeQFTCircuit(5)
 # writeCircuit("5 \n" + "INITSTATE FILE myInputState.txt \n"+ qftcircuit, "Circuits\qft5")
 circuit = open('Circuits/qft5.circuit').read()
-print(Simulator_s(circuit))
+print(Simulator_s(circuit))'''
 
 # 3 Qubits
 
