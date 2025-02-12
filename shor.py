@@ -46,7 +46,7 @@ def findPeriod2(x, N):
     return r
 
 def getTopWires(u_wires):
-    return 2*u_wires + 1
+    return 2*u_wires - 1
 
 def generateShorCircuit(x, N):
     u_wires = int(np.ceil(np.log2(N)))
@@ -60,11 +60,58 @@ def generateShorCircuit(x, N):
     quantum_simulators.writeCircuit(circuit, "Shor_Circuits/shor-" + str(x) + "-" + str(N))
     return circuit
 
+def generateShorFasterCircuit(x, N):
+    u_wires = int(np.ceil(np.log2(N)))
+    top_wires = getTopWires(u_wires)
+    num_wires = top_wires + u_wires
+
+    u_circuit = []
+    
+    for i in range(top_wires):
+        new_x = x
+        for j in range(i):
+            #print(i, j)
+            u_circuit.append(str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(new_x) + " " + str(N))
+            new_x = (new_x*new_x) % N
+
+    #print(u_circuit)
+
+    circuit = phase_est_circuit.makeArbitraryShortPhaseEstCircuit(top_wires,u_circuit)
+    input_state = format(1, "0" + str(num_wires) + "b")
+
+    circuit = str(num_wires) + "\n" + "INITSTATE BASIS |" + input_state + "> \n" + circuit
+    #print(circuit)
+    quantum_simulators.writeCircuit(circuit, "Shor_Circuits/shorfast-" + str(x) + "-" + str(N))
+    return circuit
+
+#generateShorFasterCircuit(3, 5)
+
 def findPeriodQ(x, N):
     u_wires = int(np.ceil(np.log2(N)))
     top_wires = getTopWires(u_wires)
     
     out = quantum_simulators.Simulator_s(generateShorCircuit(x, N))
+    #print(out)
+
+    estim = 0
+    amp = 0
+    for i in out:
+        if int(i[1][0:top_wires], 2) == 0:
+            continue
+        temp_amp = np.conj(i[0])*i[0]
+        if temp_amp > amp:
+            amp = temp_amp
+            estim = int(i[1][0:top_wires], 2)/(2**(top_wires))
+    # print(estim)
+
+    r = (Fraction(estim).limit_denominator(N)).denominator
+    return r
+
+def findPeriodQF(x, N):
+    u_wires = int(np.ceil(np.log2(N)))
+    top_wires = getTopWires(u_wires)
+    
+    out = quantum_simulators.Simulator_s(generateShorFasterCircuit(x, N))
     # print(out)
 
     estim = 0
@@ -80,6 +127,7 @@ def findPeriodQ(x, N):
 
     r = (Fraction(estim).limit_denominator(N)).denominator
     return r
+
 
 def classicalShor(N):
     if disregardEasy(N):
@@ -147,6 +195,29 @@ def QuantumShor(N):
             return (A, B)
             #return (A, B, x, r)
 
+def QuantumShorF(N):
+    if disregardEasy(N):
+        return -1
+    
+    while True:
+        x = np.random.randint(2, N)
+        if np.gcd(x, N) != 1:
+            continue
+            #return(np.gcd(x, N), N//np.gcd(x, N))
+        
+        print("Finding Period for: x =", x, ", N =", N)
+        r = findPeriodQF(x,N)
+        print("Found Period of: r =", r)
+
+        if r % 2 == 1:
+            continue
+
+        A = np.gcd(int((x**(r//2)-1) % N),N)
+        B = np.gcd(int((x**(r//2)+1) % N),N)
+        if A != 1 and B != 1 and A != N and B != N:
+            return (A, B)
+            #return (A, B, x, r)
+
 def disregardEasy(N):
     if N % 2 == 0:
         return True
@@ -162,11 +233,12 @@ def disregardEasy(N):
 #print(findPeriodQ(14,15))
 #print(findPeriodQ(5,21))
 
-#print(QuantumShor(15))
+#print(QuantumShor(21))
+print(QuantumShorF(15))
 
 # Gate Sizes
 
-for i in range(2,100):
+'''for i in range(2,100):
     generateShorCircuit(1, i)
 
 generated_circuits = os.listdir("Shor_Circuits")
@@ -183,7 +255,7 @@ plt.scatter(n_list,gate_list)
 plt.xlabel("N")
 plt.ylabel("Number of Gates")
 plt.title("Gates needed for using Shor's Algorithm")
-plt.savefig("Images/shorgates")
+plt.savefig("Images/shorgates")'''
 
 # Quantum Shor
 

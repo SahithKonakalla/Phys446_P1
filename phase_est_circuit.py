@@ -6,7 +6,7 @@ def makeQFTCircuit(num_wires):
     for i in range(num_wires-1):
         for j in range(num_wires-i-1):
             output += "SWAP " + str(j) + " " + str(j+1) + "\n"
-
+    
     
     for i in range(num_wires):
         output += "H " + str(num_wires-i-1) + "\n"
@@ -52,6 +52,24 @@ def makeArbitraryPhaseEstCircuit(top_wires, circuit):
     for i in range(top_wires):
        for j in range(2**i):
             output += makeControl(top_wires-i-1, top_wires, circuit)
+    
+    # Inverse QFT
+    output += invert(makeQFTCircuit(top_wires))
+    return output
+
+def makeArbitraryShortPhaseEstCircuit(top_wires, circuit):
+    output = ""
+
+    # Hadamard Section
+    for i in range(top_wires):
+        output += "H " + str(i) + "\n"
+
+    # U Section
+    count = 0
+    for i in range(top_wires):
+        for j in range(i):
+            output += makeControl(top_wires-i-1, top_wires, circuit[count])
+            count += 1
     
     # Inverse QFT
     output += invert(makeQFTCircuit(top_wires))

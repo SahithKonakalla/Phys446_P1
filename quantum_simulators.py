@@ -220,6 +220,8 @@ def Simulator_s(circuit):
     myState = VecToDirac(myState)
 
     circuit_len = len(myInput)
+    #print(sum(1 for n in myInput if n[0] != "CxyModN"))
+
     i = 0
     for gate in myInput:
         match gate[0]:
@@ -235,6 +237,7 @@ def Simulator_s(circuit):
                 myState = CxyModN(int(gate[1]), int(gate[2]), int(gate[3]), int(gate[4]), int(gate[5]), myState)
     
         i += 1
+        #print(i, circuit_len, gate)
         printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
         myState = AddDuplicates(myState)
 
@@ -425,10 +428,13 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
 np.set_printoptions(formatter={'all': lambda x: "{:.4g}".format(x)})
 
 circuit = '''
-2
-INITSTATE FILE swap_test.txt
-SWAP 0 1 
+5
+SWAP 2 5
 '''
+
+numberOfWires,myInput,myState,measure=ReadInputString(circuit)
+print(precompile(myInput))
+
 
 #circuit = open('Circuits/example.circuit').read()
 
@@ -476,6 +482,10 @@ for q in range(mat, 8):
 '''
 
 # Quantum Fourier Transform
+
+# 4 Qubits
+
+#print(phase_est_circuit.makeQFTCircuit(4))
 
 # 5 Qubits
 
