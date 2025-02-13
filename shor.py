@@ -180,13 +180,15 @@ def QuantumShor(N):
         x = np.random.randint(2, N)
         if np.gcd(x, N) != 1:
             continue
-            #return(np.gcd(x, N), N//np.gcd(x, N))
         
         print("Finding Period for: x =", x, ", N =", N)
         r = findPeriodQ(x,N)
         print("Found Period of: r =", r)
 
         if r % 2 == 1:
+            continue
+
+        if x**r % N != 1:
             continue
 
         A = np.gcd(int((x**(r//2)-1) % N),N)
@@ -203,13 +205,15 @@ def QuantumShorF(N):
         x = np.random.randint(2, N)
         if np.gcd(x, N) != 1:
             continue
-            #return(np.gcd(x, N), N//np.gcd(x, N))
         
         print("Finding Period for: x =", x, ", N =", N)
         r = findPeriodQF(x,N)
         print("Found Period of: r =", r)
 
         if r % 2 == 1:
+            continue
+
+        if x**r % N != 1:
             continue
 
         A = np.gcd(int((x**(r//2)-1) % N),N)
@@ -233,12 +237,12 @@ def disregardEasy(N):
 #print(findPeriodQ(14,15))
 #print(findPeriodQ(5,21))
 
-#print(QuantumShor(21))
-print(QuantumShorF(15))
+print(QuantumShor(15))
+#print(QuantumShorF(15))
 
 # Gate Sizes
 
-'''for i in range(2,100):
+for i in range(2,100):
     generateShorCircuit(1, i)
 
 generated_circuits = os.listdir("Shor_Circuits")
@@ -255,7 +259,7 @@ plt.scatter(n_list,gate_list)
 plt.xlabel("N")
 plt.ylabel("Number of Gates")
 plt.title("Gates needed for using Shor's Algorithm")
-plt.savefig("Images/shorgates")'''
+plt.savefig("Images/shorgates")
 
 # Quantum Shor
 

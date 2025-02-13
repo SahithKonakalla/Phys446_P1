@@ -220,6 +220,7 @@ def Simulator_s(circuit):
     myState = VecToDirac(myState)
 
     circuit_len = len(myInput)
+    print(circuit_len, " gates... ")
     #print(sum(1 for n in myInput if n[0] != "CxyModN"))
 
     i = 0
@@ -317,15 +318,21 @@ def precompile(circuit):
                             tempgate = str(int(output)+1)
                         else:
                             tempgate = str(int(control)+1)
-                        circuit[i] = ["CNOT", tempgate, control] # Swap 1
-                        circuit.insert(i+1, ["CNOT", control, tempgate])
-                        circuit.insert(i+2, ["CNOT", tempgate, control])
+                        
+                        circuit[i] = ["SWAP", tempgate, control]
+                        circuit.insert(i+1, ["CNOT", tempgate, output])
+                        circuit.insert(i+2, ["SWAP", tempgate, control])
+                        depth += 1
 
-                        circuit.insert(i+3, ["CNOT", tempgate, output]) # CNOT
+                        #circuit[i] = ["CNOT", tempgate, control] # Swap 1
+                        #circuit.insert(i+1, ["CNOT", control, tempgate])
+                        #circuit.insert(i+2, ["CNOT", tempgate, control])
 
-                        circuit.insert(i+4, ["CNOT", tempgate, control]) #Swap 2
-                        circuit.insert(i+5, ["CNOT", control, tempgate])
-                        circuit.insert(i+6, ["CNOT", tempgate, control])
+                        #circuit.insert(i+3, ["CNOT", tempgate, output]) # CNOT
+
+                        #circuit.insert(i+4, ["CNOT", tempgate, control]) #Swap 2
+                        #circuit.insert(i+5, ["CNOT", control, tempgate])
+                        #circuit.insert(i+6, ["CNOT", tempgate, control])
                 case "NOT":
                     gate = circuit[i][1]
                     circuit[i] = ["H", gate]
@@ -358,10 +365,24 @@ def precompile(circuit):
                 case "SWAP":
                     gate1 = circuit[i][1]
                     gate2 = circuit[i][2]
-                    circuit[i] = ["CNOT", gate1, gate2]
-                    circuit.insert(i+1, ["CNOT", gate2, gate1])
-                    circuit.insert(i+2, ["CNOT", gate1, gate2])
-                    depth += 1
+
+                    count = 0
+                    if abs(int(gate1) - int(gate2)) > 1:
+                        for g in range(int(gate1), int(gate2)):
+                            if count == 0:
+                                circuit[i] = ["SWAP", str(g), str(g+1)]
+                            else:
+                                circuit.insert(i+count, ["SWAP", str(g), str(g+1)])
+                            count += 1
+                        for g in range(int(gate2)-1, int(gate1), -1):
+                            circuit.insert(i+count, ["SWAP", str(g), str(g-1)])
+                            count += 1
+                        depth += 1
+                    else:
+                        circuit[i] = ["CNOT", gate1, gate2]
+                        circuit.insert(i+1, ["CNOT", gate2, gate1])
+                        circuit.insert(i+2, ["CNOT", gate1, gate2])
+                        
             i += 1
         j += 1
     
@@ -393,6 +414,15 @@ def isDirac(myState):
 def writeCircuit(circuit, filename):
     f = open(filename + ".circuit", "w")
     f.write(circuit)
+    f.close()
+
+def writeCircuitArray(circuit, filename):
+    f = open(filename + ".circuit", "w")
+
+    output = ""
+    for gate in circuit:
+        output += " ".join(gate) + "\n"
+    f.write(output)
     f.close()
 
 def phaseEstBoxer(top_wires,num_wires,out):
@@ -433,7 +463,7 @@ SWAP 2 5
 '''
 
 numberOfWires,myInput,myState,measure=ReadInputString(circuit)
-print(precompile(myInput))
+writeCircuitArray(precompile(myInput), "Circuits/swap25")
 
 
 #circuit = open('Circuits/example.circuit').read()
