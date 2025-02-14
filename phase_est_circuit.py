@@ -29,13 +29,18 @@ def makePhaseEstCircuit(top_wires, num_wires, phase):
         output += "H " + str(i) + "\n"
 
     # U Section
+    for i in range(top_wires):
+       for j in range(2**i):
+            output += "CPHASE " + str(top_wires-i-1) + " " + str(top_wires) + " " + str(phase) + "\n"
+
+    # U Section
     # for i in range(top_wires):
     #    for j in range(2**i):
     #         output += "CPHASE " + str(top_wires-i-1) + " " + str(top_wires) + " " + str(phase) + "\n"
 
     # Faster U
-    for i in range(top_wires):
-        output += "CPHASE " + str(top_wires-i-1) + " " + str(top_wires) + " " + str(phase*(2**i)) + "\n"
+    #for i in range(top_wires):
+    #    output += "CPHASE " + str(top_wires-i-1) + " " + str(top_wires) + " " + str(phase*(2**i)) + "\n"
     
     # Inverse QFT
     output += invert(makeQFTCircuit(top_wires))
@@ -65,12 +70,15 @@ def makeArbitraryShortPhaseEstCircuit(top_wires, circuit):
         output += "H " + str(i) + "\n"
 
     # U Section
-    count = 0
-    for i in range(top_wires):
-        for j in range(i):
-            output += makeControl(top_wires-i-1, top_wires, circuit[count])
-            count += 1
+    #count = 0
+    #for i in range(top_wires):
+    #    for j in range(i):
+    #        output += makeControl(top_wires-i-1, top_wires, circuit[count])
+    #        count += 1
     
+    for i in range(top_wires):
+        output += makeControl(top_wires-i-1, top_wires, circuit[i])
+
     # Inverse QFT
     output += invert(makeQFTCircuit(top_wires))
     return output

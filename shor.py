@@ -1,3 +1,4 @@
+import timeit
 import numpy as np
 from fractions import Fraction
 import sys
@@ -67,12 +68,16 @@ def generateShorFasterCircuit(x, N):
 
     u_circuit = []
     
+    #for i in range(top_wires):
+    #    new_x = x
+    #    for j in range(i):
+    #        #print(i, j)
+    #        u_circuit.append(str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(new_x) + " " + str(N))
+    #        new_x = (new_x*new_x) % N
+    new_x = x
     for i in range(top_wires):
-        new_x = x
-        for j in range(i):
-            #print(i, j)
-            u_circuit.append(str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(new_x) + " " + str(N))
-            new_x = (new_x*new_x) % N
+        u_circuit.append(str(u_wires) + "\n xyModN 0 " + str(u_wires) + " " + str(new_x) + " " + str(N))
+        new_x = (new_x*new_x) % N
 
     #print(u_circuit)
 
@@ -237,12 +242,12 @@ def disregardEasy(N):
 #print(findPeriodQ(14,15))
 #print(findPeriodQ(5,21))
 
-print(QuantumShor(15))
-#print(QuantumShorF(15))
+#print(QuantumShor(15))
+#print(QuantumShorF(21))
 
 # Gate Sizes
 
-for i in range(2,100):
+'''for i in range(2,100):
     generateShorCircuit(1, i)
 
 generated_circuits = os.listdir("Shor_Circuits")
@@ -259,9 +264,23 @@ plt.scatter(n_list,gate_list)
 plt.xlabel("N")
 plt.ylabel("Number of Gates")
 plt.title("Gates needed for using Shor's Algorithm")
-plt.savefig("Images/shorgates")
+plt.savefig("Images/shorgates2")'''
+
+# Speed Up times
+
+""" start_time = timeit.default_timer()
+print(QuantumShor(15))
+elapsed = timeit.default_timer() - start_time
+print("(SLOW) N=15 Time elapsed:", elapsed)
+
+start_time = timeit.default_timer()
+print(QuantumShorF(15))
+elapsed = timeit.default_timer() - start_time
+print("(FAST) N=15 Time elapsed:", elapsed) """
 
 # Quantum Shor
+
+#print(QuantumShor(21))
 
 '''for i in range(7,25):
     print("Factoring:", i)
@@ -272,28 +291,63 @@ plt.savefig("Images/shorgates")
         print("Non-Trivial! Factors:")
         print(factors, "---", factors2, "---", factors3)'''
 
+# CxyModN Gates
+
+""" for i in range(0,7):
+    for j in range(0,32,16):
+        circuit = "5 \nINITSTATE BASIS |" + format(i+j, "0" + str(5) + "b") + "> \nCxyModN 0 1 4 2 8"
+
+        print(circuit)
+        print(quantum_simulators.Simulator_s(circuit))
+ """
+# xyModN Gates
+
+""" for i in range(0,7):
+    circuit = "4 \nINITSTATE BASIS |" + format(i, "0" + str(4) + "b") + "> \nxyModN 0 4 2 8"
+
+    print(circuit)
+    print(quantum_simulators.Simulator_s(circuit)) """
+
+
 # Classical with Unitary Matrix
 
-'''for i in range(2,2**10):
+""" for i in range(2,2**10):
     factors2 = classicalShor2(i)
-    factors = classicalShor(i)
-    if factors != -1:
-        print(i, factors, " --- ", factors2)'''
-
+    #factors = classicalShor(i)
+    if factors2 != -1:
+        print(i, factors2) """
 
 # Eigenvalues
 
-'''eig = np.linalg.eigvals(buildUnitary(2,5))
+""" for N in range(8,2**5):
+    while True:
+        x = np.random.randint(2, N)
+        if np.gcd(x, N) != 1:
+            continue
+        
+        r = findPeriod2(x,N)
+
+        if x**r % N != 1:
+            continue
+
+        print("N =", N, "x =", x, "r =", r)
+        break """
+
+""" eig = np.linalg.eigvals(buildUnitary(2,5))
 phases = (np.angle(eig) + 2*np.pi)/(2*np.pi)
-print(phases)
+print("x =",2,"N =",5)
+print("e = ", phases)
 r = 4 # 2^4 = 16 and 16 mod 5 = 1
-print(phases*r)
+print("r = ", r)
+print("e*r = ", phases*r)
 
 eig = np.linalg.eigvals(buildUnitary(7,39))
 phases = (np.angle(eig) + 2*np.pi)/(2*np.pi)
-print(phases)
+print("x =",7,"N =",39)
+print("e = ", phases)
 r = 12 # 2^4 = 16 and 16 mod 5 = 1
-print(phases*r)'''
+print("r = ", r)
+print("e*r = ", phases*r) """
 
 # Unitary
 
@@ -301,7 +355,23 @@ print(phases*r)'''
 
 # Classical
 
-'''for i in range(2,2**10):
+""" for N in range(8,2**5):
+    while True:
+        x = np.random.randint(2, N)
+        if np.gcd(x, N) != 1:
+            continue
+        
+        r = findPeriod(x,N)
+
+        if x**r % N != 1:
+            continue
+
+        print("N =", N, "x =", x, "r =", r)
+        break """
+
+#print(classicalShor(33))
+
+""" for i in range(2,2**10):
     factors = classicalShor(i)
     if factors != -1:
-        print(i, factors)'''
+        print(i, factors) """

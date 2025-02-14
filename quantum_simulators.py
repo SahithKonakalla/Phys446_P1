@@ -293,6 +293,7 @@ def Simulator_b(circuit):
                 myState = CNOTArray(int(gate[1]), int(gate[2]), numberOfWires).dot(myState)
         i += 1
         printProgressBar(i, circuit_len, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    if measure:
         return measureState(np.ravel(myState))
     return VecToDirac(np.round(np.ravel(np.transpose(myState)), 4))
 
@@ -341,7 +342,7 @@ def precompile(circuit):
                 case "RZ":
                     gate = circuit[i][1]
                     phase = float(circuit[i][2])
-                    circuit[i] = ["NOT", circuit[i][1]]
+                    circuit[i] = ["NOT", gate]
                     circuit.insert(i+1, ["P", gate, str(-phase/2)])
                     circuit.insert(i+2, ["NOT", gate])
                     circuit.insert(i+3, ["P", gate, str(phase/2)])
@@ -462,8 +463,8 @@ circuit = '''
 SWAP 2 5
 '''
 
-numberOfWires,myInput,myState,measure=ReadInputString(circuit)
-writeCircuitArray(precompile(myInput), "Circuits/swap25")
+#numberOfWires,myInput,myState,measure=ReadInputString(circuit)
+#writeCircuitArray(precompile(myInput), "Circuits/swap25")
 
 
 #circuit = open('Circuits/example.circuit').read()
@@ -519,14 +520,20 @@ for q in range(mat, 8):
 
 # 5 Qubits
 
-'''# qftcircuit = phase_est_circuit.makeQFTCircuit(5)
-# writeCircuit("5 \n" + "INITSTATE FILE myInputState.txt \n"+ qftcircuit, "Circuits\qft5")
-circuit = open('Circuits/qft5.circuit').read()
-print(Simulator_s(circuit))'''
+#qftcircuit = phase_est_circuit.makeQFTCircuit(5)
+#writeCircuit("5 \n" + "INITSTATE FILE myInputState.txt \n"+ qftcircuit, "Circuits\qft5")
+
+#circuit = open("Circuits\qft5.circuit").read()
+#print(Simulator_s(circuit))
+
+# circuit = open('Circuits/qft5.circuit').read()
+# A = Simulator_a(circuit, True)[1]
+# print(A*np.sqrt(32))
+
 
 # 3 Qubits
 
-'''circuit = open("Circuits/qft3.circuit").read()
+""" circuit = open("Circuits/qft3.circuit").read()
 
 A = Simulator_a(circuit, True)[1]
 
@@ -535,15 +542,16 @@ for i in range(len(B)):
     for j in range(len(B[0])):
         B[i][j] = np.round(np.power(np.sqrt(0+1j),(i*j)), 2)/np.sqrt(8)
 
-print(np.round(A-B,2))'''
+print(A*np.sqrt(8)) """
+#print(np.round(A-B,2))
 
 # Phase Estimation
 
 # Arbitrary 
 
-'''phase_estimation_circuit = "8 \n INITSTATE BASIS |00000011> \n" + phase_est_circuit.makeArbitraryPhaseEstCircuit(6, "NOT 0 \n P 0 0.3 \n NOT 1 \n")
+""" phase_estimation_circuit = "8 \n INITSTATE BASIS |00000011> \n" + phase_est_circuit.makeArbitraryPhaseEstCircuit(6, "NOT 0 \n P 0 -np.pi \n NOT 1 \n P 1 np.pi")
 out = Simulator_s(phase_estimation_circuit)
-print(out)
+print(phase_estimation_circuit)
 
 steps = [i/(2**(len(out[0][1])-2)) for i in range(2**6+1)]
 vals = phaseEstBoxer(6,8,out)
@@ -554,7 +562,11 @@ plt.title("Phase Estimation with New Circuit")
 plt.xlabel("Estimated Phase")
 plt.ylabel("Probability")
 plt.savefig("Images/phaseesthistarbit.png")
-plt.show()'''
+plt.show() """
+
+# Something
+
+#print(phase_est_circuit.makePhaseEstCircuit(6, 7, np.pi))
 
 # Speed
 
@@ -604,7 +616,7 @@ plt.show()'''
 
 # 6 Wires
 
-'''phase = np.linspace(0, 2*np.pi, 9)
+'''phase = np.linspace(0, 2*np.pi, 100)
 estim_list = []
 
 for p in phase:
@@ -742,6 +754,22 @@ plt.ylabel("Probability")
 plt.savefig("phaseesthist1.png")
 plt.show()'''
 
+# Non-Atomic Gates
+
+# Full
+# circuit = open("Circuits/atomic_test.circuit").read()
+# print(Simulator_s(circuit))
+
+# Swap(2,5)
+
+# circuit = "1 \n INITSTATE BASIS |1> \n SWAP 2 5"
+# print(Simulator_s(circuit))
+
+# Not
+
+#circuit = "1 \n INITSTATE BASIS |1> \n NOT 0"
+#print(Simulator_s(circuit))
+
 # Measure Time Complexity
 
 '''skip_m = 12
@@ -821,5 +849,24 @@ plt.savefig("MeasPD")
 
 # Measure
 
-'''circuit = open("Circuits/input.circuit").read()
-print(Simulator_s(circuit))'''
+#circuit = open("Circuits/input.circuit").read()
+#print(Simulator_a(circuit))
+
+# Sim s
+# circuit = open("Circuits/rand.circuit").read()
+# print(Simulator_s(circuit))
+
+'''circuit = "3 \n H 1 \n H 2 \n P 2 0.3 \n CNOT 2 1 \n H 1 H 2 \n CNOT 2 0"
+print("Simulator S:", Simulator_s(circuit))
+print("Simulator M-a:", Simulator_a(circuit))
+print("Simulator M-b:", Simulator_b(circuit))
+
+circuit = open("Circuits/input.circuit").read()
+print("Simulator S:", Simulator_s(circuit))
+print("Simulator M-a:", Simulator_a(circuit))
+print("Simulator M-b:", Simulator_b(circuit))
+
+circuit = open("Circuits/example.circuit").read()
+print("Simulator S:", Simulator_s(circuit[:-1]))
+print("Simulator M-a:", Simulator_a(circuit[:-1]))
+print("Simulator M-b:", Simulator_b(circuit[:-1]))'''

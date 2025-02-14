@@ -43,8 +43,8 @@ myState2=[
    (np.sqrt(0.5), '000') ,
    (-np.sqrt(0.4), '010' )] 
 
-PrettyPrintBinary(myState2)
-PrettyPrintInteger(myState2)
+#PrettyPrintBinary(myState2)
+#PrettyPrintInteger(myState2)
 
-print(DiracToVec(myState2))
-print(VecToDirac(DiracToVec(myState2)))
+#print(DiracToVec(myState2))
+#print(VecToDirac(DiracToVec(myState2)))

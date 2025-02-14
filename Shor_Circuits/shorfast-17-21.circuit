@@ -9,42 +9,15 @@ H 5
 H 6
 H 7
 H 8
-CxyModN 7 9 5 4 21
+CxyModN 8 9 5 17 21
+CxyModN 7 9 5 16 21
 CxyModN 6 9 5 4 21
-CxyModN 6 9 5 16 21
-CxyModN 5 9 5 4 21
 CxyModN 5 9 5 16 21
-CxyModN 5 9 5 4 21
 CxyModN 4 9 5 4 21
-CxyModN 4 9 5 16 21
-CxyModN 4 9 5 4 21
-CxyModN 4 9 5 16 21
-CxyModN 3 9 5 4 21
 CxyModN 3 9 5 16 21
-CxyModN 3 9 5 4 21
-CxyModN 3 9 5 16 21
-CxyModN 3 9 5 4 21
 CxyModN 2 9 5 4 21
-CxyModN 2 9 5 16 21
-CxyModN 2 9 5 4 21
-CxyModN 2 9 5 16 21
-CxyModN 2 9 5 4 21
-CxyModN 2 9 5 16 21
-CxyModN 1 9 5 4 21
 CxyModN 1 9 5 16 21
-CxyModN 1 9 5 4 21
-CxyModN 1 9 5 16 21
-CxyModN 1 9 5 4 21
-CxyModN 1 9 5 16 21
-CxyModN 1 9 5 4 21
 CxyModN 0 9 5 4 21
-CxyModN 0 9 5 16 21
-CxyModN 0 9 5 4 21
-CxyModN 0 9 5 16 21
-CxyModN 0 9 5 4 21
-CxyModN 0 9 5 16 21
-CxyModN 0 9 5 4 21
-CxyModN 0 9 5 16 21
 
 H 0
 CPHASE 1 0 -1.5707963267948966
