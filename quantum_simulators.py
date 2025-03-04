@@ -463,6 +463,9 @@ circuit = '''
 SWAP 2 5
 '''
 
+#circuit = open("Circuits/reverse.circuit").read()
+#print(Simulator_s(circuit))
+
 #numberOfWires,myInput,myState,measure=ReadInputString(circuit)
 #writeCircuitArray(precompile(myInput), "Circuits/swap25")
 
@@ -561,7 +564,7 @@ plt.stairs(vals, steps, fill=True)
 plt.title("Phase Estimation with New Circuit")
 plt.xlabel("Estimated Phase")
 plt.ylabel("Probability")
-plt.savefig("Images/phaseesthistarbit.png")
+plt.savefig("Images/phaseesthistarbit2.png")
 plt.show() """
 
 # Something

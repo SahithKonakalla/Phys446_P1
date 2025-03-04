@@ -116,19 +116,22 @@ def findPeriodQF(x, N):
     u_wires = int(np.ceil(np.log2(N)))
     top_wires = getTopWires(u_wires)
     
-    out = quantum_simulators.Simulator_s(generateShorFasterCircuit(x, N))
-    # print(out)
+    out = quantum_simulators.Simulator_s(generateShorFasterCircuit(x, N) + "\n" + "MEASURE")
+    #print(out)
 
-    estim = 0
+    """ estim = 0
     amp = 0
     for i in out:
+        #print(i[0], i[1], int(i[1][0:top_wires], 2)/(2**(top_wires)), int(i[1][0:top_wires], 2)/(2**(top_wires))*2, int(i[1][0:top_wires], 2)/(2**(top_wires))*4)
         if int(i[1][0:top_wires], 2) == 0:
             continue
         temp_amp = np.conj(i[0])*i[0]
         if temp_amp > amp:
             amp = temp_amp
             estim = int(i[1][0:top_wires], 2)/(2**(top_wires))
-    # print(estim)
+    print(estim) """
+    estim = int(out[0:top_wires],2)/(2**(top_wires))
+    print(estim)
 
     r = (Fraction(estim).limit_denominator(N)).denominator
     return r
@@ -210,7 +213,8 @@ def QuantumShorF(N):
         x = np.random.randint(2, N)
         if np.gcd(x, N) != 1:
             continue
-        
+        x = 7
+
         print("Finding Period for: x =", x, ", N =", N)
         r = findPeriodQF(x,N)
         print("Found Period of: r =", r)
@@ -246,6 +250,8 @@ def disregardEasy(N):
 #print(QuantumShorF(21))
 
 # Gate Sizes
+
+QuantumShorF(15)
 
 '''for i in range(2,100):
     generateShorCircuit(1, i)
@@ -375,3 +381,7 @@ print("e*r = ", phases*r) """
     factors = classicalShor(i)
     if factors != -1:
         print(i, factors) """
+
+print(QuantumShorF(15))
+#print(findPeriodQ(13,15))
+#print(findPeriodQF(14,15))
