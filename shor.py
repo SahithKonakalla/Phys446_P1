@@ -95,19 +95,10 @@ def findPeriodQ(x, N):
     u_wires = int(np.ceil(np.log2(N)))
     top_wires = getTopWires(u_wires)
     
-    out = quantum_simulators.Simulator_s(generateShorCircuit(x, N))
+    out = quantum_simulators.Simulator_s(generateShorCircuit(x, N) + "\n" + "MEASURE")
     #print(out)
 
-    estim = 0
-    amp = 0
-    for i in out:
-        if int(i[1][0:top_wires], 2) == 0:
-            continue
-        temp_amp = np.conj(i[0])*i[0]
-        if temp_amp > amp:
-            amp = temp_amp
-            estim = int(i[1][0:top_wires], 2)/(2**(top_wires))
-    # print(estim)
+    estim = int(out[0:top_wires],2)/(2**(top_wires))
 
     r = (Fraction(estim).limit_denominator(N)).denominator
     return r
@@ -119,19 +110,7 @@ def findPeriodQF(x, N):
     out = quantum_simulators.Simulator_s(generateShorFasterCircuit(x, N) + "\n" + "MEASURE")
     #print(out)
 
-    """ estim = 0
-    amp = 0
-    for i in out:
-        #print(i[0], i[1], int(i[1][0:top_wires], 2)/(2**(top_wires)), int(i[1][0:top_wires], 2)/(2**(top_wires))*2, int(i[1][0:top_wires], 2)/(2**(top_wires))*4)
-        if int(i[1][0:top_wires], 2) == 0:
-            continue
-        temp_amp = np.conj(i[0])*i[0]
-        if temp_amp > amp:
-            amp = temp_amp
-            estim = int(i[1][0:top_wires], 2)/(2**(top_wires))
-    print(estim) """
     estim = int(out[0:top_wires],2)/(2**(top_wires))
-    print(estim)
 
     r = (Fraction(estim).limit_denominator(N)).denominator
     return r
